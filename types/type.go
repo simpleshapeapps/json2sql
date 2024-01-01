@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/iancoleman/strcase"
 )
@@ -51,6 +50,10 @@ func Register(thing ThingConfig) {
 	thingConfigMap[thing.Name] = thing
 }
 
+func Clear() {
+	thingConfigMap = map[string]ThingConfig{}
+}
+
 func (fc *FieldConfig) GetColumnName() string {
 	result := strcase.ToSnake(fc.Name)
 	if fc.Type == THING || fc.Type == RELATION {
@@ -79,10 +82,10 @@ func (tc *ThingConfig) GetFieldsNames() []string {
 	return result
 }
 
-func Get(name string) ThingConfig {
+func Get(name string) (ThingConfig, error) {
 	thing, ok := thingConfigMap[name]
 	if !ok {
-		log.Fatalln("thingConfig: " + name + " doesn't exists")
+		return ThingConfig{}, fmt.Errorf("thingConfig: %s doesn't exists", name)
 	}
-	return thing
+	return thing, nil
 }
