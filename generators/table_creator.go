@@ -4,11 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"json2sql/types"
-	"slices"
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"golang.org/x/exp/maps"
 )
 
 type CreateTable struct {
@@ -49,12 +47,7 @@ func (ct *CreateTable) getFieldCreateStrings(thingConfig types.ThingConfig) ([]s
 	results := []string{}
 	var errs []error
 
-	fields := maps.Values(thingConfig.Fields)
-	slices.SortFunc(fields, func(a, b types.FieldConfig) int {
-		return strings.Compare(a.Name, b.Name)
-	})
-
-	for _, field := range fields {
+	for _, field := range thingConfig.GetFields() {
 		fieldCreateString, err := GetTableFieldCreate(field)
 		if err != nil {
 			errs = append(errs, err)
