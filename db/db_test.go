@@ -10,7 +10,7 @@ import (
 )
 
 var host = getEnvOrDefault("POSTGRES_HOST", "localhost")
-var port = getEnvOrDefault("POSTGRES_PORT", "postgres")
+var port = getEnvOrDefault("POSTGRES_PORT", "5432")
 var user = getEnvOrDefault("POSTGRES_USER", "postgres")
 var password = getEnvOrDefault("POSTGRES_PASSWORD", "postgres")
 var databaseName = getEnvOrDefault("POSTGRES_DATABASE", "postgres")
@@ -37,6 +37,23 @@ func TestDbConnection(t *testing.T) {
 	err = db.Ping()
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	rows, err := db.Queryx("SELECT 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result int
+
+	rows.Next()
+	err = rows.Scan(&result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if result != 1 {
+		t.Fatalf("SELECT 1 returned: %d", result)
 	}
 }
 
