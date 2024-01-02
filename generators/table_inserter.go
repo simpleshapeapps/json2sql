@@ -1,9 +1,13 @@
 package generators
 
 import (
+	"errors"
 	"fmt"
 	"json2sql/types"
+	"sort"
 	"strings"
+
+	"golang.org/x/exp/maps"
 )
 
 type InsertIntoTable struct {
@@ -11,21 +15,35 @@ type InsertIntoTable struct {
 	Values map[string]any
 }
 
-func (iit *InsertIntoTable) GetSql() (string, error) {
-	thing := iit.Thing
-	valuesMap := iit.Values
+func (iit *InsertIntoTable) GetValuesFieldNames() []string {
+	fieldNames := maps.Keys(iit.Values)
+	sort.Strings(fieldNames)
+	return fieldNames
+}
 
+func (iit *InsertIntoTable) GetSql() (string, error) {
+	var errs []error
+	thing := iit.Thing
 	intoString := ""
 	valuesString := ""
 
-	for _, field := range thing.GetFields() {
+	for _, fieldName := range iit.GetValuesFieldNames() {
+		field, err := thing.GetField(fieldName)
+
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		if field.Type == types.PRIMARY_KEY {
+			err := errors.New("cannot insert primary key")
+			errs = append(errs, err)
+			continue
+		}
+
 		valueFieldName := field.Name
 		if field.Type == types.RELATION || field.Type == types.THING {
 			valueFieldName = field.Name + "Id"
-		}
-
-		if valueFieldName == "id" || valuesMap[valueFieldName] == nil {
-			continue
 		}
 
 		intoString += fmt.Sprintf(`"%s", `, field.GetColumnName())
@@ -38,5 +56,5 @@ func (iit *InsertIntoTable) GetSql() (string, error) {
 	query := fmt.Sprintf(`INSERT INTO "%s" (`+intoString+`)
 VALUES (`+valuesString+`)`, thing.GetTableName())
 
-	return query, nil
+	return query, errors.Join(errs...)
 }
