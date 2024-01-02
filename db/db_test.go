@@ -61,7 +61,7 @@ func TestDbConnection(t *testing.T) {
 	}
 }
 
-func TestCreateTable(t *testing.T) {
+func TestCreateSimpleTable(t *testing.T) {
 	types.Register(parentThing)
 	types.Register(childThing)
 	types.Register(otherThing)
