@@ -2,8 +2,11 @@ package types
 
 import (
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/iancoleman/strcase"
+	"golang.org/x/exp/maps"
 )
 
 const (
@@ -68,6 +71,14 @@ func (tc *ThingConfig) GetField(name string) (FieldConfig, error) {
 		return FieldConfig{}, fmt.Errorf("field: %s not in thing: %s", name, tc.Name)
 	}
 	return fieldConfig, nil
+}
+
+func (tc *ThingConfig) GetFields() []FieldConfig {
+	fields := maps.Values(tc.Fields)
+	slices.SortFunc(fields, func(a, b FieldConfig) int {
+		return strings.Compare(a.Name, b.Name)
+	})
+	return fields
 }
 
 func (tc *ThingConfig) GetTableName() string {
