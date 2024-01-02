@@ -9,8 +9,8 @@ import (
 var parentThing = types.ThingConfig{
 	Name: "parentThing",
 	Fields: map[string]types.FieldConfig{
-		"primary_key": {
-			Name: "primary_key",
+		"primaryKey": {
+			Name: "primaryKey",
 			Type: types.PRIMARY_KEY,
 		},
 		"string": {
@@ -49,8 +49,8 @@ var parentThing = types.ThingConfig{
 var childThing = types.ThingConfig{
 	Name: "childThing",
 	Fields: map[string]types.FieldConfig{
-		"primary_key": {
-			Name: "primary_key",
+		"primaryKey": {
+			Name: "primaryKey",
 			Type: types.PRIMARY_KEY,
 		},
 		"string": {
@@ -89,7 +89,7 @@ var childThing = types.ThingConfig{
 var otherThing = types.ThingConfig{
 	Name: "otherThing",
 	Fields: map[string]types.FieldConfig{
-		"primary_key": {
+		"primaryKey": {
 			Name: "primary_key",
 			Type: types.PRIMARY_KEY,
 		},
