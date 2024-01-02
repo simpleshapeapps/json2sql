@@ -18,20 +18,20 @@ type CreateTable struct {
 
 func (ct *CreateTable) GetSql() ([]string, error) {
 	results := []string{}
-	var errs error
+	var errs []error
 	sql, err := ct.getTableSql(ct.Thing)
 	if err != nil {
-		errs = errors.Join(errs, err)
+		errs = append(errs, err)
 	}
 	results = append(results, sql)
 	for _, otherThing := range ct.otherThings {
 		sql, err := ct.getTableSql(otherThing)
 		if err != nil {
-			errs = errors.Join(errs, err)
+			errs = append(errs, err)
 		}
 		results = append(results, sql)
 	}
-	return results, errs
+	return results, errors.Join(errs...)
 }
 
 func (ct *CreateTable) getTableSql(thingConfig types.ThingConfig) (string, error) {
@@ -47,7 +47,7 @@ func (ct *CreateTable) getTableSql(thingConfig types.ThingConfig) (string, error
 
 func (ct *CreateTable) getFieldCreateStrings(thingConfig types.ThingConfig) ([]string, error) {
 	results := []string{}
-	var errs error
+	var errs []error
 
 	fields := maps.Values(thingConfig.Fields)
 	slices.SortFunc(fields, func(a, b types.FieldConfig) int {
@@ -57,7 +57,7 @@ func (ct *CreateTable) getFieldCreateStrings(thingConfig types.ThingConfig) ([]s
 	for _, field := range fields {
 		fieldCreateString, err := GetTableFieldCreate(field)
 		if err != nil {
-			errs = errors.Join(errs, err)
+			errs = append(errs, err)
 			continue
 		}
 
@@ -69,7 +69,7 @@ func (ct *CreateTable) getFieldCreateStrings(thingConfig types.ThingConfig) ([]s
 		if field.Type == types.THING {
 			otherThing, err := types.Get(field.TypeThingName)
 			if err != nil {
-				errs = errors.Join(errs, err)
+				errs = append(errs, err)
 			}
 			ct.otherThings = append(ct.otherThings, otherThing)
 		}
@@ -77,13 +77,13 @@ func (ct *CreateTable) getFieldCreateStrings(thingConfig types.ThingConfig) ([]s
 		if field.Type == types.RELATION {
 			otherThing, err := types.Get(field.Relation.OtherThingName)
 			if err != nil {
-				errs = errors.Join(errs, err)
+				errs = append(errs, err)
 			}
 			ct.otherThings = append(ct.otherThings, otherThing)
 		}
 	}
 
-	return results, errs
+	return results, errors.Join(errs...)
 }
 
 func GetTableFieldCreate(field types.FieldConfig) (string, error) {
