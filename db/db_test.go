@@ -6,6 +6,7 @@ import (
 	"json2sql/types"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -92,6 +93,93 @@ func TestCreateSimpleTable(t *testing.T) {
 			if rows.Next() {
 				t.Fatalf("No rows in %s expected", tableName)
 			}
+		}
+	})
+}
+
+func TestSimpleInsertIntoTable(t *testing.T) {
+	types.Register(parentThing)
+	types.Register(childThing)
+	types.Register(otherThing)
+	defer types.Clear()
+
+	createTable := generators.CreateTable{
+		Thing: parentThing,
+	}
+	createTableSql, err := createTable.GetSql()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	date := time.Now().Truncate(24 * time.Hour)
+
+	insert := generators.InsertIntoTable{
+		Thing: parentThing,
+		Values: map[string]any{
+			"string":  "test string",
+			"number":  1.1,
+			"boolean": true,
+			"date":    date,
+		},
+	}
+
+	insertSql, err := insert.GetSql()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	doAndRollback(func(tx *sqlx.Tx) {
+		tx.MustExec(createTableSql[0])
+
+		result, err := tx.NamedExec(insertSql, insert.Values)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		ra, err := result.RowsAffected()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if ra != 1 {
+			t.Fatalf("expected row affected 1 got: %d", ra)
+		}
+
+		rows, err := tx.Queryx("SELECT string, boolean, date, number FROM parent_thing")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rows.Next()
+
+		m := map[string]interface{}{}
+		err = rows.MapScan(m)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		b, err := parentThing.Fields["boolean"].GetBool(m)
+		if err != nil || b != true {
+			t.Fatalf("expected: true got: %v, err: %v", b, err)
+		}
+
+		s, err := parentThing.Fields["string"].GetString(m)
+		if err != nil || s != "test string" {
+			t.Fatalf("expected: test string got: %v, err: %v", s, err)
+		}
+
+		n, err := parentThing.Fields["number"].GetFloat64(m)
+		if err != nil || n != 1.1 {
+			t.Fatalf("expected: 1.1 got: %v, err: %v", n, err)
+		}
+
+		d, err := parentThing.Fields["date"].GetDate(m)
+		if err != nil || !d.Equal(date) {
+			t.Fatalf("expected: %v got: %v, err: %v", date, n, err)
+		}
+
+		if rows.Next() != false {
+			t.Fatal("expected only one row")
 		}
 	})
 }
