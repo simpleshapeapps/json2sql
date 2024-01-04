@@ -3,7 +3,9 @@ package types
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/maps"
@@ -99,4 +101,68 @@ func Get(name string) (ThingConfig, error) {
 		return ThingConfig{}, fmt.Errorf("thingConfig: %s doesn't exists", name)
 	}
 	return thing, nil
+}
+
+func (fc FieldConfig) GetBool(valuesMap map[string]any) (bool, error) {
+	fieldName := fc.Name
+	value, ok := valuesMap[fieldName]
+	if !ok {
+		return false, fmt.Errorf("key: %s is not present in valuesMap", fieldName)
+	}
+
+	switch v := value.(type) {
+	case bool:
+		return v, nil
+	default:
+		return false, fmt.Errorf("value: %v is not boolean", v)
+	}
+}
+
+func (fc FieldConfig) GetString(valuesMap map[string]any) (string, error) {
+	fieldName := fc.Name
+	value, ok := valuesMap[fieldName]
+	if !ok {
+		return "", fmt.Errorf("key: %s is not present in valuesMap", fieldName)
+	}
+
+	switch v := value.(type) {
+	case string:
+		return v, nil
+	default:
+		return "", fmt.Errorf("value: %v is not string", v)
+	}
+}
+
+func (fc FieldConfig) GetFloat64(valuesMap map[string]any) (float64, error) {
+	fieldName := fc.Name
+	value, ok := valuesMap[fieldName]
+	if !ok {
+		return 0, fmt.Errorf("key: %s is not present in valuesMap", fieldName)
+	}
+
+	switch v := value.(type) {
+	case float64:
+		return v, nil
+	case []uint8:
+		str := string(v)
+		float, err := strconv.ParseFloat(str, 64)
+		return float, err
+	default:
+		return 0, fmt.Errorf("value: %v is not float64", v)
+	}
+}
+
+func (fc FieldConfig) GetDate(valuesMap map[string]any) (time.Time, error) {
+	fieldName := fc.Name
+	value, ok := valuesMap[fieldName]
+	if !ok {
+		return time.Time{}, fmt.Errorf("key: %s is not present in valuesMap", fieldName)
+	}
+
+	switch v := value.(type) {
+	case time.Time:
+		return v, nil
+	default:
+		return time.Time{}, fmt.Errorf("value: %v is not date", v)
+	}
 }
