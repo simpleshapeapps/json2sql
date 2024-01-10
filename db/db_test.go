@@ -184,6 +184,168 @@ func TestSimpleInsertIntoTable(t *testing.T) {
 	})
 }
 
+func TestSimpleSelect(t *testing.T) {
+	types.Register(parentThing)
+	types.Register(childThing)
+	types.Register(otherThing)
+	defer types.Clear()
+
+	createTable := generators.CreateTable{
+		Thing: parentThing,
+	}
+
+	date := time.Now().Truncate(24 * time.Hour)
+
+	insert := generators.InsertIntoTable{
+		Thing: parentThing,
+		Values: map[string]any{
+			"string":  "test string",
+			"number":  1.1,
+			"boolean": true,
+			"date":    date,
+		},
+	}
+
+	insert2 := generators.InsertIntoTable{
+		Thing: parentThing,
+		Values: map[string]any{
+			"string":  "test string",
+			"number":  1.1,
+			"boolean": false,
+			"date":    date,
+		},
+	}
+
+	s := generators.SelectFromTable{
+		Thing: parentThing,
+		FieldsMap: map[string]any{
+			"string":  "",
+			"number":  "",
+			"boolean": "",
+			"date":    "",
+			"_where":  "boolean = true AND number = 1.1",
+		},
+	}
+
+	s2 := generators.SelectFromTable{
+		Thing: parentThing,
+		FieldsMap: map[string]any{
+			"string":  "",
+			"number":  "",
+			"boolean": "",
+			"date":    "",
+			"_where":  "string = 'test string'",
+		},
+	}
+
+	doAndRollback(func(tx *sqlx.Tx) {
+		err := executeCreateTable(&createTable, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = executeInsert(&insert, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = executeInsert(&insert2, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		result, err := executeSelect(&s, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(result) != 1 {
+			t.Fatalf("expected 1 row got: %d", len(result))
+		}
+
+		first := result[0]
+
+		b, err := parentThing.Fields["boolean"].GetBool(first)
+		if err != nil || b != true {
+			t.Fatalf("expected: true got: %v, err: %v", b, err)
+		}
+
+		s, err := parentThing.Fields["string"].GetString(first)
+		if err != nil || s != "test string" {
+			t.Fatalf("expected: test string got: %v, err: %v", s, err)
+		}
+
+		n, err := parentThing.Fields["number"].GetFloat64(first)
+		if err != nil || n != 1.1 {
+			t.Fatalf("expected: 1.1 got: %v, err: %v", n, err)
+		}
+
+		d, err := parentThing.Fields["date"].GetDate(first)
+		if err != nil || !d.Equal(date) {
+			t.Fatalf("expected: %v got: %v, err: %v", date, n, err)
+		}
+
+		result, err = executeSelect(&s2, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(result) != 2 {
+			t.Fatalf("expected 1 row got: %d", len(result))
+		}
+	})
+}
+
+func executeCreateTable(ct *generators.CreateTable, tx *sqlx.Tx) error {
+	createTableSql, err := ct.GetSql()
+	if err != nil {
+		return err
+	}
+
+	tx.MustExec(createTableSql[0])
+	return nil
+}
+
+func executeInsert(iit *generators.InsertIntoTable, tx *sqlx.Tx) error {
+	insertSql, err := iit.GetSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.NamedExec(insertSql, iit.Values)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func executeSelect(s *generators.SelectFromTable, tx *sqlx.Tx) ([]map[string]any, error) {
+	result := []map[string]any{}
+	query, err := s.GetSql()
+	if err != nil {
+		return result, err
+	}
+
+	whereValues := s.GetWhereValues()
+	rows, err := tx.Queryx(query, whereValues...)
+	if err != nil {
+		return result, err
+	}
+
+	for rows.Next() {
+		m := map[string]interface{}{}
+		err = rows.MapScan(m)
+		if err != nil {
+			return result, err
+		} else {
+			result = append(result, m)
+		}
+	}
+
+	return result, nil
+}
+
 func getDb() *sqlx.DB {
 	if db == nil {
 		connectionString := fmt.Sprintf("host=%s port=%s user=%s "+
