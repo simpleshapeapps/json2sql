@@ -69,7 +69,7 @@ func TestCreateSimpleTable(t *testing.T) {
 	defer types.Clear()
 
 	generator := generators.CreateTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 	}
 
 	sqls, err := generator.GetSql()
@@ -104,7 +104,7 @@ func TestSimpleInsertIntoTable(t *testing.T) {
 	defer types.Clear()
 
 	createTable := generators.CreateTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 	}
 	createTableSql, err := createTable.GetSql()
 	if err != nil {
@@ -114,7 +114,7 @@ func TestSimpleInsertIntoTable(t *testing.T) {
 	date := time.Now().Truncate(24 * time.Hour)
 
 	insert := generators.InsertIntoTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		Values: map[string]any{
 			"string":  "test string",
 			"number":  1.1,
@@ -191,13 +191,13 @@ func TestSimpleSelect(t *testing.T) {
 	defer types.Clear()
 
 	createTable := generators.CreateTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 	}
 
 	date := time.Now().Truncate(24 * time.Hour)
 
 	insert := generators.InsertIntoTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		Values: map[string]any{
 			"string":  "test string",
 			"number":  1.1,
@@ -207,7 +207,7 @@ func TestSimpleSelect(t *testing.T) {
 	}
 
 	insert2 := generators.InsertIntoTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		Values: map[string]any{
 			"string":  "test string",
 			"number":  1.1,
@@ -217,7 +217,7 @@ func TestSimpleSelect(t *testing.T) {
 	}
 
 	s := generators.SelectFromTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		FieldsMap: map[string]any{
 			"string":  "",
 			"number":  "",
@@ -228,7 +228,7 @@ func TestSimpleSelect(t *testing.T) {
 	}
 
 	s2 := generators.SelectFromTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		FieldsMap: map[string]any{
 			"string":  "",
 			"number":  "",

@@ -11,8 +11,9 @@ import (
 )
 
 type InsertIntoTable struct {
-	Thing  types.ThingConfig
-	Values map[string]any
+	ThingName string
+	Values    map[string]any
+	thing     types.ThingConfig
 }
 
 func (iit *InsertIntoTable) GetValuesFieldNames() []string {
@@ -23,7 +24,10 @@ func (iit *InsertIntoTable) GetValuesFieldNames() []string {
 
 func (iit *InsertIntoTable) GetSql() (string, error) {
 	var errs []error
-	thing := iit.Thing
+	thing, err := types.Get(iit.ThingName)
+	if err != nil {
+		return "", err
+	}
 	intoString := ""
 	valuesString := ""
 

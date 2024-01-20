@@ -107,7 +107,7 @@ func TestCreateTableWithAllFieldTypes(t *testing.T) {
 	types.Register(otherThing)
 
 	generator := generators.CreateTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 	}
 	sqls, err := generator.GetSql()
 
@@ -161,7 +161,7 @@ func TestUnregisteredFieldTypeThing(t *testing.T) {
 	types.Register(parentThing)
 
 	generator := generators.CreateTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 	}
 	_, err := generator.GetSql()
 

@@ -14,10 +14,11 @@ import (
 )
 
 type SelectFromTable struct {
-	Thing         types.ThingConfig
+	ThingName     string
 	FieldsMap     map[string]any
 	Page          uint
 	Count         uint
+	thing         types.ThingConfig
 	columnsString string
 	whereString   string
 	whereValues   []any
@@ -39,7 +40,7 @@ func (s *SelectFromTable) GetSql() (string, error) {
 		return "", nil
 	}
 
-	mainTableName := strcase.ToSnake(s.Thing.Name)
+	mainTableName := strcase.ToSnake(s.thing.Name)
 
 	query := fmt.Sprintf("SELECT %s\n"+
 		"FROM \"%s\" %s", s.columnsString, mainTableName, mainTableAlias)
@@ -65,8 +66,14 @@ func (s *SelectFromTable) GetWhereValues() []any {
 }
 
 func (s *SelectFromTable) prepareSelect() error {
+	thing, err := types.Get(s.ThingName)
+	if err != nil {
+		return err
+	}
+	s.thing = thing
+
 	var errs []error
-	thingConfig := s.Thing
+	thingConfig := s.thing
 
 	keys := maps.Keys(s.FieldsMap)
 	slices.SortFunc(keys, func(a, b string) int {
@@ -132,7 +139,7 @@ func (s *SelectFromTable) GetWhereString() (string, error) {
 		return "", fmt.Errorf("_where is empty")
 	}
 
-	thing := s.Thing
+	thing := s.thing
 	for _, token := range tokens {
 		whereField, isField := thing.Fields[token]
 		if isField {

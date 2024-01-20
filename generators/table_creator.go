@@ -10,14 +10,21 @@ import (
 )
 
 type CreateTable struct {
-	Thing       types.ThingConfig
+	ThingName   string
 	otherThings []types.ThingConfig
+	thing       types.ThingConfig
 }
 
 func (ct *CreateTable) GetSql() ([]string, error) {
+	thing, err := types.Get(ct.ThingName)
+	if err != nil {
+		return []string{}, err
+	}
+	ct.thing = thing
+
 	results := []string{}
 	var errs []error
-	sql, err := ct.getTableSql(ct.Thing)
+	sql, err := ct.getTableSql(ct.thing)
 	if err != nil {
 		errs = append(errs, err)
 	}

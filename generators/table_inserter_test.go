@@ -8,7 +8,7 @@ import (
 
 func TestInsert(t *testing.T) {
 	generator := generators.InsertIntoTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		Values: map[string]any{
 			"string":  "test",
 			"number":  1,

@@ -12,7 +12,7 @@ func TestSimpleSelect(t *testing.T) {
 	types.Register(parentThing)
 
 	s := generators.SelectFromTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		FieldsMap: map[string]any{
 			"string":  "",
 			"boolean": 0,
@@ -43,7 +43,7 @@ func TestSimpleSelectWithWhere(t *testing.T) {
 	types.Register(parentThing)
 
 	s := generators.SelectFromTable{
-		Thing: parentThing,
+		ThingName: parentThing.Name,
 		FieldsMap: map[string]any{
 			"string":  "",
 			"boolean": 0,
